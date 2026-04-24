@@ -45,14 +45,20 @@ func editor_setup(p_plugin) -> void:
 func get_terrain() -> Terrain3D:
 	var terrain := instance_from_id(_terrain_id) as Terrain3D
 	if not terrain or terrain.is_queued_for_deletion() or not terrain.is_inside_tree():
-		var terrains: Array[Node] = Engine.get_singleton(&"EditorInterface").get_edited_scene_root().find_children("", "Terrain3D")
-		if terrains.size() > 0:
-			terrain = terrains[0]
+		var old_terrain := terrain
+		if Engine.is_editor_hint():
+			var terrains: Array[Node] = Engine.get_singleton(&"EditorInterface").get_edited_scene_root().find_children("", "Terrain3D")
+			if terrains.size() > 0:
+				terrain = terrains[0]
 		_terrain_id = terrain.get_instance_id() if terrain else 0
-	
+		# Disconnect maps_edited from the previous terrain if it changed.
+		if old_terrain and old_terrain != terrain and old_terrain.data:
+			if old_terrain.data.maps_edited.is_connected(_on_maps_edited):
+				old_terrain.data.maps_edited.disconnect(_on_maps_edited)
+
 	if terrain and terrain.data and not terrain.data.maps_edited.is_connected(_on_maps_edited):
 		terrain.data.maps_edited.connect(_on_maps_edited)
-	
+
 	return terrain
 
 

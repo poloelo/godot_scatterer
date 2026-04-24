@@ -515,7 +515,7 @@ class ListContainer extends Container:
 
 	
 	func set_selected_after_swap(p_type: Terrain3DAssets.AssetType, p_old_id: int, p_new_id: int) -> void:
-		set_selected_id(clamp(p_new_id, 0, entries.size() - 2))
+		set_selected_id(clamp(p_new_id, 0, max(0, entries.size() - 2)))
 
 
 	func set_selected_id(p_id: int) -> void:
@@ -559,32 +559,38 @@ class ListContainer extends Container:
 				asset_dock.confirm_dialog.dialog_text = "Are you sure you want to clear this mesh and delete all instances?"
 			asset_dock.confirm_dialog.popup_centered()
 			await asset_dock.confirmation_closed
+			if not is_inside_tree():
+				return
 			if not asset_dock._confirmed:
 				update_asset_list()
 				return
-			
+
 		if not plugin.is_terrain_valid():
 			plugin.select_terrain()
 			await get_tree().create_timer(.01).timeout
+			if not is_inside_tree():
+				return
 
-		if plugin.is_terrain_valid():
+		if plugin.is_terrain_valid() and p_id < entries.size() - 1:
 			if type == Terrain3DAssets.TYPE_TEXTURE:
 				plugin.terrain.get_assets().set_texture(p_id, p_resource)
 			else:
 				plugin.terrain.get_assets().set_mesh_asset(p_id, p_resource)
 				await get_tree().create_timer(.01).timeout
+				if not is_inside_tree():
+					return
 				plugin.terrain.assets.create_mesh_thumbnails(p_id)
 
 			# If removing an entry, clear inspector
 			if not p_resource:
-				EditorInterface.inspect_object(null)			
-				
-		# If null resource, remove last 
+				EditorInterface.inspect_object(null)
+
+		# If null resource, remove last
 		if not p_resource:
 			var last_offset: int = 2
 			if p_id == entries.size()-2:
 				last_offset = 3
-			set_selected_id(clamp(selected_id, 0, entries.size() - last_offset))
+			set_selected_id(clamp(selected_id, 0, max(0, entries.size() - last_offset)))
 
 
 	func get_selected_id() -> int:
@@ -843,6 +849,14 @@ class ListEntry extends VBoxContainer:
 
 
 	func set_edited_resource(p_res: Resource, p_no_signal: bool = true) -> void:
+		if resource:
+			if resource.setting_changed.is_connected(_on_resource_changed):
+				resource.setting_changed.disconnect(_on_resource_changed)
+			if resource.file_changed.is_connected(_on_resource_changed):
+				resource.file_changed.disconnect(_on_resource_changed)
+			if resource is Terrain3DMeshAsset and \
+					resource.instancer_setting_changed.is_connected(_on_resource_changed):
+				resource.instancer_setting_changed.disconnect(_on_resource_changed)
 		resource = p_res
 		if resource:
 			resource.setting_changed.connect(_on_resource_changed)

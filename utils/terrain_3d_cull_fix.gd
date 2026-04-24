@@ -45,6 +45,16 @@ func _ready() -> void:
 	_connect_terrain_signals.call_deferred()
 
 
+func _exit_tree() -> void:
+	if not is_instance_valid(_terrain):
+		return
+	if _terrain.assets and _terrain.assets.meshes_changed.is_connected(_apply_to_all):
+		_terrain.assets.meshes_changed.disconnect(_apply_to_all)
+	for sig_name in ["instancer_changed", "instances_changed"]:
+		if _terrain.has_signal(sig_name) and Signal(_terrain, sig_name).is_connected(_apply_to_all):
+			Signal(_terrain, sig_name).disconnect(_apply_to_all)
+
+
 # --------------------------------------------------------------------------- #
 #  Signal wiring                                                                #
 # --------------------------------------------------------------------------- #
