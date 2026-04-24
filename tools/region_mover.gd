@@ -26,7 +26,8 @@ func start_rename(val: bool = false) -> void:
 	data_directory = ""
 	var dir := DirAccess.open(dir_name)
 	if not dir:
-		print("An error occurred when trying to access the path: ", data_directory)
+		data_directory = dir_name
+		push_error("An error occurred when trying to access the path: ", dir_name)
 		return
 
 	var affected_files: PackedStringArray
@@ -36,6 +37,7 @@ func start_rename(val: bool = false) -> void:
 			var region_loc: Vector2i = Terrain3DUtil.filename_to_location(file_name)
 			var new_loc: Vector2i = region_loc + offset
 			if new_loc.x < -16 or new_loc.x > 15 or new_loc.y < -16 or new_loc.y > 15:
+				data_directory = dir_name
 				push_error("New location %.0v out of bounds for region %.0v. Aborting" % [ new_loc, region_loc ])
 				return
 			var new_name: String = "tmp_" + Terrain3DUtil.location_to_filename(new_loc)

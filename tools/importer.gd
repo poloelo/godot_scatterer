@@ -26,6 +26,8 @@ func reset_settings(p_value) -> void:
 
 
 func reset_terrain(p_value) -> void:
+	if not p_value:
+		return
 	data_directory = ""
 	for region:Terrain3DRegion in data.get_regions_active():
 		data.remove_region(region, false)
@@ -81,7 +83,7 @@ func start_import(p_value: bool) -> void:
 		if color_file_name:
 			img = Terrain3DUtil.load_image(color_file_name, ResourceLoader.CACHE_MODE_IGNORE)
 			imported_images[Terrain3DRegion.TYPE_COLOR] = img
-			if assets.get_texture_count() == 0:
+			if assets and assets.get_texture_count() == 0:
 				material.show_checkered = false
 				material.show_colormap = true
 		var pos := Vector3(import_position.x, 0, import_position.y)
@@ -103,6 +105,8 @@ enum { TYPE_HEIGHT, TYPE_CONTROL, TYPE_COLOR }
 @export var run_export: bool = false : set = start_export
 
 func start_export(p_value: bool) -> void:
+	if not p_value:
+		return
 	var err: int = data.export_image(file_name_out, map_type)
 	print("Terrain3DImporter: Export error status: ", err, " ", error_string(err))
 	

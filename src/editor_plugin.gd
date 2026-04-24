@@ -142,7 +142,9 @@ func _clear() -> void:
 	if is_terrain_valid():
 		if terrain.data.region_map_changed.is_connected(update_region_grid):
 			terrain.data.region_map_changed.disconnect(update_region_grid)
-		
+		if terrain.assets_changed.is_connected(asset_dock.update_assets):
+			terrain.assets_changed.disconnect(asset_dock.update_assets)
+
 		terrain.clear_gizmos()
 		terrain = null
 		editor.set_terrain(null)
@@ -387,13 +389,15 @@ func update_region_grid() -> void:
 func _on_scene_changed(scene_root: Node) -> void:
 	if not scene_root:
 		return
-		
+
 	for node in scene_root.find_children("", "Terrain3DObjects"):
 		node.editor_setup(self)
 
 	asset_dock.update_assets()
+	var expected_root: Node = scene_root
 	await get_tree().create_timer(2).timeout
-	asset_dock.update_thumbnails()
+	if get_tree().edited_scene_root == expected_root and is_instance_valid(asset_dock):
+		asset_dock.update_thumbnails()
 
 		
 func is_terrain_valid(p_terrain: Terrain3D = null) -> bool:

@@ -47,7 +47,7 @@ func get_min() -> float:
 	
 func set_max(p_value: float) -> void:
 	max_value = p_value
-	if range.y == 0 or range.y >= max_value:
+	if range.y >= max_value:
 		range.y = max_value
 		set_value(range)
 	update_label()
@@ -101,9 +101,8 @@ func _gui_input(p_event: InputEvent) -> void:
 		var button: int = p_event.get_button_index()
 		if button in [ MOUSE_BUTTON_LEFT, MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN ]:
 			if p_event.is_pressed():
-				var mid_point = (range.x + range.y) / 2.0
-				var xpos: float = p_event.get_position().x * 2.0
-				if xpos >= mid_point:
+				var mid_norm: float = (range.x + range.y) / (2.0 * max_value)
+				if p_event.get_position().x / size.x >= mid_norm:
 					grabbed_handle = 1
 				else:
 					grabbed_handle = -1
@@ -155,10 +154,9 @@ func _notification(p_what: int) -> void:
 		draw_style_box(area, Rect2(Vector2(startx, mid_y), Vector2(endx - startx, bg_height)))
 		
 		# Draw handles, slightly in so they don't get on the outside edges
-		var handle_pos: Vector2
-		handle_pos.x = clamp(startx - handle.get_size().x/2, -10, size.x)
-		handle_pos.y = clamp(endx - handle.get_size().x/2, 0, size.x - 10)
-		draw_texture(handle, Vector2(handle_pos.x, -mid_y - 10 * (display_scale - 1.)))
-		draw_texture(handle, Vector2(handle_pos.y, -mid_y - 10 * (display_scale - 1.)))
+		var left_x: float = clamp(startx - handle.get_size().x / 2, -10, size.x)
+		var right_x: float = clamp(endx - handle.get_size().x / 2, 0, size.x - 10)
+		draw_texture(handle, Vector2(left_x, -mid_y - 10 * (display_scale - 1.)))
+		draw_texture(handle, Vector2(right_x, -mid_y - 10 * (display_scale - 1.)))
 		
 		update_label()

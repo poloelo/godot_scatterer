@@ -211,13 +211,13 @@ func create_submenu(p_parent: Control, p_button_name: String, p_layout: Layout, 
 			_on_show_submenu(false, menu_button)
 			submenu.set_meta("mouse_entered", false)
 			return
-			
-		focused_element.focus_exited.connect(func():
-			# Close submenu once lineedit loses focus
+
+		var close_fn: Callable = func():
 			if not submenu.get_meta("mouse_entered"):
 				_on_show_submenu(false, menu_button)
 				submenu.set_meta("mouse_entered", false)
-		)
+		if not focused_element.focus_exited.is_connected(close_fn):
+			focused_element.focus_exited.connect(close_fn, CONNECT_ONE_SHOT)
 	)
 	
 	var sublist: Container
@@ -314,7 +314,11 @@ func add_brushes(p_parent: Control) -> void:
 	brush_list.columns = sqrt(brush_list.get_child_count()) + 2
 	
 	if not default_brush_btn:
-		default_brush_btn = brush_button_group.get_buttons()[0]
+		var all_buttons: Array[BaseButton] = brush_button_group.get_buttons()
+		if all_buttons.is_empty():
+			push_error("Terrain3D: No brush textures found in " + BRUSH_PATH)
+			return
+		default_brush_btn = all_buttons[0]
 	default_brush_btn.set_pressed(true)
 	_generate_brush_texture(default_brush_btn)
 	
