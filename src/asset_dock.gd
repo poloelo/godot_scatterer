@@ -571,7 +571,7 @@ class ListContainer extends Container:
 			if not is_inside_tree():
 				return
 
-		if plugin.is_terrain_valid() and p_id < entries.size() - 1:
+		if plugin.is_terrain_valid():
 			if type == Terrain3DAssets.TYPE_TEXTURE:
 				plugin.terrain.get_assets().set_texture(p_id, p_resource)
 			else:
